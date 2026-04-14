@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Pedidos{% endblock %}
+{% block page_title %}Pedidos{% endblock %}
+{% block page_subtitle %}Control completo de todos los pedidos{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'crear_pedido' %}" class="btn btn-success btn-sm">
+  <i class="bi bi-plus-lg me-1"></i>Nuevo Pedido
+</a>
+{% endblock %}
+{% block content %}
+<!-- Filtros -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Cliente o # pedido...">
+        </div>
+      </div>
+      <div class="col-md-2">
+        <select name="estado" class="form-select form-select-sm">
+          <option value="">Todos los estados</option>
+          {% for val, label in estados %}
+          <option value="{{ val }}" {% if val == estado %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="tipo" class="form-select form-select-sm">
+          <option value="">Todos los tipos</option>
+          {% for val, label in tipos %}
+          <option value="{{ val }}" {% if val == tipo %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-secondary btn-sm">Filtrar</button>
+        <a href="{% url 'lista_pedidos' %}" class="btn btn-outline-secondary btn-sm ms-1">Limpiar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tabla de pedidos -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr>
+            <th class="ps-4">#</th>
+            <th>Cliente</th>
+            <th>Tipo Vidrio</th>
+            <th>Medidas / Área</th>
+            <th>Trabajo</th>
+            <th>Total</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in page_obj %}
+          <tr>
+            <td class="ps-4 fw-semibold text-primary">#{{ p.pk }}</td>
+            <td>
+              <a href="{% url 'detalle_cliente' p.cliente.pk %}" class="text-decoration-none fw-semibold">
+                {{ p.cliente.nombre }}
+              </a>
+              <div class="text-muted small">{{ p.cliente.ciudad }}</div>
+            </td>
+            <td><span class="badge bg-light text-dark">{{ p.get_tipo_vidrio_display }}</span></td>
+            <td class="small">
+              {{ p.ancho }} × {{ p.alto }} m
+              <div class="text-muted">{{ p.area_calculada }} m²</div>
+            </td>
+            <td class="small">{{ p.get_tipo_trabajo_display }}</td>
+            <td class="fw-semibold">${{ p.precio_total|floatformat:0 }}</td>
+            <td class="small {% if p.saldo_pendiente > 0 %}text-danger fw-semibold{% else %}text-success{% endif %}">
+              ${{ p.saldo_pendiente|floatformat:0 }}
+            </td>
+            <td>
+              <span class="badge badge-{{ p.estado }}">{{ p.get_estado_display }}</span>
+            </td>
+            <td><small class="text-muted">{{ p.fecha|date:"d/m/Y" }}</small></td>
+            <td>
+              <a href="{% url 'detalle_pedido' p.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="text-center text-muted py-5">
+              <i class="bi bi-bag" style="font-size:3rem;display:block;margin-bottom:.5rem;"></i>
+              No hay pedidos. <a href="{% url 'crear_pedido' %}">Crear el primero</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+      <nav><ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&estado={{ estado }}">&#8249;</a></li>
+        {% endif %}
+        <li class="page-item active"><a class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</a></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&estado={{ estado }}">&#8250;</a></li>
+        {% endif %}
+      </ul></nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

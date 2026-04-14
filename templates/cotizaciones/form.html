@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Editar Precios{% endblock %}
+{% block page_title %}Editar Configuración de Precios{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}{{ form.as_p }}
+          <button class="btn btn-primary btn-lg">Guardar Precios</button>
+          <a href="{% url 'lista_configuracion' %}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

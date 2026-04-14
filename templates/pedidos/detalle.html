@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Pedido #{{ pedido.pk }}{% endblock %}
+{% block page_title %}Pedido #{{ pedido.pk }}{% endblock %}
+{% block page_subtitle %}{{ pedido.cliente.nombre }} — {{ pedido.get_estado_display }}{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'registrar_pago' %}?pedido={{ pedido.pk }}" class="btn btn-success btn-sm me-2">
+  <i class="bi bi-cash me-1"></i>Registrar Pago
+</a>
+<a href="{% url 'editar_pedido' pedido.pk %}" class="btn btn-outline-primary btn-sm">
+  <i class="bi bi-pencil me-1"></i>Editar
+</a>
+{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <!-- Info principal del pedido -->
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4">
+        <h6 class="mb-0">Detalles del Pedido</h6>
+        <span class="badge badge-{{ pedido.estado }} py-2 px-3" style="font-size:.85rem;">
+          {{ pedido.get_estado_display }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1">Cliente</div>
+            <a href="{% url 'detalle_cliente' pedido.cliente.pk %}" class="fw-semibold text-decoration-none">
+              {{ pedido.cliente.nombre }}
+            </a>
+            <div class="small text-muted">{{ pedido.cliente.telefono }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1">Tipo de Vidrio</div>
+            <span class="badge bg-primary">{{ pedido.get_tipo_vidrio_display }}</span>
+          </div>
+          <div class="col-sm-3">
+            <div class="text-muted small mb-1">Ancho</div>
+            <div class="fw-semibold">{{ pedido.ancho }} m</div>
+          </div>
+          <div class="col-sm-3">
+            <div class="text-muted small mb-1">Alto</div>
+            <div class="fw-semibold">{{ pedido.alto }} m</div>
+          </div>
+          <div class="col-sm-3">
+            <div class="text-muted small mb-1">Área</div>
+            <div class="fw-semibold text-primary">{{ pedido.area_calculada }} m²</div>
+          </div>
+          <div class="col-sm-3">
+            <div class="text-muted small mb-1">Tipo Trabajo</div>
+            <div class="fw-semibold">{{ pedido.get_tipo_trabajo_display }}</div>
+          </div>
+          {% if pedido.descripcion %}
+          <div class="col-12">
+            <div class="text-muted small mb-1">Descripción / Diseño</div>
+            <div class="p-2 bg-light rounded small">{{ pedido.descripcion }}</div>
+          </div>
+          {% endif %}
+          {% if pedido.ciudad_entrega %}
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1">Ciudad de Entrega</div>
+            <div>{{ pedido.ciudad_entrega }}
+              {% if pedido.es_envio_nacional %}
+              <span class="badge bg-warning text-dark ms-1">Nacional</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% if pedido.fecha_entrega_estimada %}
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1">Entrega Estimada</div>
+            <div>{{ pedido.fecha_entrega_estimada|date:"d/m/Y" }}</div>
+          </div>
+          {% endif %}
+          {% if pedido.trabajador_asignado %}
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1">Trabajador Asignado</div>
+            <div>{{ pedido.trabajador_asignado.nombre }}</div>
+          </div>
+          {% endif %}
+        </div>
+        {% if pedido.imagen %}
+        <div class="mt-3">
+          <div class="text-muted small mb-2">Imagen de Referencia</div>
+          <img src="{{ pedido.imagen.url }}" class="img-fluid rounded" style="max-height:250px;" alt="Referencia">
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Pagos del pedido -->
+    <div class="card">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 px-4">
+        <h6 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Pagos Registrados</h6>
+        <a href="{% url 'registrar_pago' %}?pedido={{ pedido.pk }}" class="btn btn-sm btn-success">
+          <i class="bi bi-plus"></i> Registrar Pago
+        </a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="bg-light">
+            <tr><th class="ps-3">Monto</th><th>Tipo</th><th>Referencia</th><th>Fecha</th><th>Registrado por</th></tr>
+          </thead>
+          <tbody>
+            {% for pago in pedido.pagos.all %}
+            <tr>
+              <td class="ps-3 fw-semibold text-success">${{ pago.monto|floatformat:0 }}</td>
+              <td>{{ pago.get_tipo_pago_display }}</td>
+              <td class="small text-muted">{{ pago.referencia|default:"-" }}</td>
+              <td><small>{{ pago.fecha_pago|date:"d/m/Y" }}</small></td>
+              <td><small class="text-muted">{{ pago.registrado_por|default:"-" }}</small></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-3">Sin pagos aún</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel financiero lateral -->
+  <div class="col-lg-4">
+    <div style="background:linear-gradient(135deg,#1a56db,#0ea5e9);border-radius:14px;color:#fff;padding:1.5rem;" class="mb-3">
+      <div class="small opacity-75 mb-1">Precio Total del Pedido</div>
+      <div style="font-size:2rem;font-weight:800;">${{ pedido.precio_total|floatformat:0 }}</div>
+      <hr style="border-color:rgba(255,255,255,0.3);">
+      <div class="d-flex justify-content-between small mb-2">
+        <span>Total pagado:</span>
+        <strong>${{ pedido.total_pagado|floatformat:0 }}</strong>
+      </div>
+      <div class="d-flex justify-content-between small">
+        <span>Saldo pendiente:</span>
+        <strong class="{% if pedido.saldo_pendiente > 0 %}text-warning{% endif %}">${{ pedido.saldo_pendiente|floatformat:0 }}</strong>
+      </div>
+      <!-- Barra de progreso de pago -->
+      {% if pedido.precio_total > 0 %}
+      {% with pct=pedido.total_pagado|floatformat:0 %}
+      <div class="mt-3">
+        <div class="d-flex justify-content-between small mb-1">
+          <span>Progreso de pago</span>
+        </div>
+        <div class="progress" style="height:8px;background:rgba(255,255,255,0.2);">
+          <div class="progress-bar bg-white"
+               style="width:{% widthratio pedido.total_pagado pedido.precio_total 100 %}%;"></div>
+        </div>
+        <div class="text-end small mt-1 opacity-75">
+          {% widthratio pedido.total_pagado pedido.precio_total 100 %}% pagado
+        </div>
+      </div>
+      {% endwith %}
+      {% endif %}
+    </div>
+
+    <!-- Timeline de estado -->
+    <div class="card">
+      <div class="card-header bg-white py-3 px-4">
+        <h6 class="mb-0"><i class="bi bi-arrow-right-circle me-2"></i>Estado del Pedido</h6>
+      </div>
+      <div class="card-body">
+        {% for val, label in pedido.ESTADO %}
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div style="width:12px;height:12px;border-radius:50%;flex-shrink:0;
+            background: {% if pedido.estado == val %}#1a56db{% elif pedido.estado == 'cancelado' %}#dc3545{% else %}#e2e8f0{% endif %};">
+          </div>
+          <span class="small {% if pedido.estado == val %}fw-bold text-primary{% else %}text-muted{% endif %}">
+            {{ label }}
+          </span>
+          {% if pedido.estado == val %}<i class="bi bi-check-lg text-primary ms-auto"></i>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <a href="{% url 'editar_pedido' pedido.pk %}" class="btn btn-outline-primary w-100 mb-2">
+        <i class="bi bi-pencil me-1"></i>Editar Pedido
+      </a>
+      <a href="{% url 'lista_pedidos' %}" class="btn btn-outline-secondary w-100">
+        <i class="bi bi-arrow-left me-1"></i>Volver a Pedidos
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

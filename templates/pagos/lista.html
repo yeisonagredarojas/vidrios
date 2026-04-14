@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Pagos{% endblock %}
+{% block page_title %}Pagos{% endblock %}
+{% block page_subtitle %}Historial de todos los pagos recibidos{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'registrar_pago' %}" class="btn btn-success btn-sm me-2"><i class="bi bi-plus me-1"></i>Registrar Pago</a>
+<a href="{% url 'deudas' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-exclamation-triangle me-1"></i>Ver Deudas</a>
+{% endblock %}
+{% block content %}
+<div class="stat-card mb-3" style="max-width:300px;">
+  <div class="stat-icon" style="background:#d1fae5;"><i class="bi bi-cash-stack" style="color:#065f46;"></i></div>
+  <div><div class="stat-value">${{ total_cobrado|floatformat:0 }}</div><div class="stat-label">Total Cobrado (filtro actual)</div></div>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr><th class="ps-4">#</th><th>Cliente</th><th>Pedido</th><th>Monto</th><th>Tipo</th><th>Referencia</th><th>Fecha</th><th>Registrado por</th></tr>
+        </thead>
+        <tbody>
+          {% for p in page_obj %}
+          <tr>
+            <td class="ps-4 text-muted small">{{ p.pk }}</td>
+            <td><a href="{% url 'detalle_cliente' p.cliente.pk %}" class="fw-semibold text-decoration-none">{{ p.cliente.nombre }}</a></td>
+            <td><a href="{% url 'detalle_pedido' p.pedido.pk %}">#{{ p.pedido.pk }}</a></td>
+            <td class="fw-semibold text-success">${{ p.monto|floatformat:0 }}</td>
+            <td><span class="badge bg-light text-dark">{{ p.get_tipo_pago_display }}</span></td>
+            <td class="small text-muted">{{ p.referencia|default:"-" }}</td>
+            <td><small class="text-muted">{{ p.fecha_pago|date:"d/m/Y" }}</small></td>
+            <td><small class="text-muted">{{ p.registrado_por|default:"-" }}</small></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-5">Sin pagos registrados aún</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

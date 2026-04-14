@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Trabajadores{% endblock %}
+{% block page_title %}Trabajadores{% endblock %}
+{% block topbar_actions %}<a href="{% url 'crear_trabajador' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus me-1"></i>Agregar</a>{% endblock %}
+{% block content %}
+<div class="row g-3">
+  {% for t in trabajadores %}
+  <div class="col-md-4 col-lg-3">
+    <div class="card text-center">
+      <div class="card-body py-4">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#1a56db,#0ea5e9);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;margin-bottom:.75rem;">{{ t.nombre|first|upper }}</div>
+        <h6 class="fw-bold mb-1">{{ t.nombre }}</h6>
+        <span class="badge bg-secondary mb-2">{{ t.get_rol_display }}</span>
+        <div class="small text-muted">{{ t.telefono }}</div>
+      </div>
+      <div class="card-footer bg-white">
+        <a href="{% url 'editar_trabajador' t.pk %}" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-pencil me-1"></i>Editar</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">Sin trabajadores registrados</div>
+  {% endfor %}
+</div>
+{% endblock %}

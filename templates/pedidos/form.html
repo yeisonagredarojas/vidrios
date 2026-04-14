@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block page_subtitle %}El precio se calcula automáticamente según las medidas{% endblock %}
+
+{% block extra_css %}
+<style>
+.calc-panel {
+  background: linear-gradient(135deg, #1a56db, #0ea5e9);
+  border-radius: 14px; color: #fff; padding: 1.5rem;
+}
+.calc-panel .price-big { font-size: 2rem; font-weight: 800; }
+.calc-panel .desglose-item {
+  display: flex; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  padding-top: .5rem; margin-top: .5rem;
+  font-size: .85rem; opacity: .9;
+}
+.medida-input { font-size: 1.1rem; font-weight: 600; }
+.limite-badge { font-size: .7rem; color: #64748b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <!-- Formulario principal -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header bg-white py-3 px-4">
+        <h6 class="mb-0"><i class="bi bi-bag-plus me-2"></i>Datos del Pedido</h6>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data" id="pedidoForm">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn btn-success btn-lg px-4">
+              <i class="bi bi-check-lg me-2"></i>Guardar Pedido
+            </button>
+            <a href="{% url 'lista_pedidos' %}" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de cotización automática -->
+  <div class="col-lg-4">
+    <div class="calc-panel mb-3" id="calcPanel">
+      <div class="small mb-2 opacity-75"><i class="bi bi-calculator me-1"></i>Cotización Automática</div>
+      <div class="price-big" id="precioTotal">$0</div>
+      <div class="small mt-1 opacity-75">Precio estimado total</div>
+
+      <div id="desgloseContainer" class="mt-3 d-none">
+        <div class="desglose-item">
+          <span>Área calculada:</span>
+          <span id="areaCalc">0.00 m²</span>
+        </div>
+        <div class="desglose-item">
+          <span>Vidrio:</span>
+          <span id="precioVidrio">$0</span>
+        </div>
+        <div class="desglose-item">
+          <span>Mano de obra:</span>
+          <span id="precioMano">$0</span>
+        </div>
+        <div class="desglose-item">
+          <span>Transporte:</span>
+          <span id="precioTransporte">$0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reglas de negocio -->
+    <div class="card">
+      <div class="card-header bg-warning bg-opacity-25 py-2 px-3">
+        <small class="fw-semibold"><i class="bi bi-info-circle me-1"></i>Límites de Medidas</small>
+      </div>
+      <div class="card-body p-3">
+        <div class="mb-2">
+          <div class="fw-semibold small">Vidrio Normal</div>
+          <div class="limite-badge">Máx: 2.14m × 3.30m</div>
+        </div>
+        <div class="mb-2">
+          <div class="fw-semibold small">Vidrio Tallado / Figuritas</div>
+          <div class="limite-badge">Máx: 1.83m × 2.44m</div>
+        </div>
+        <div>
+          <div class="fw-semibold small">Espejos</div>
+          <div class="limite-badge">Espesor estándar: 3mm</div>
+        </div>
+      </div>
+    </div>
+
+    {% if config %}
+    <div class="card mt-3">
+      <div class="card-header bg-white py-2 px-3">
+        <small class="fw-semibold"><i class="bi bi-currency-dollar me-1"></i>Precios Actuales ($/m²)</small>
+      </div>
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Vidrio normal:</span>
+          <strong>${{ config.precio_vidrio_normal_m2|floatformat:0 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Tallado:</span>
+          <strong>${{ config.precio_vidrio_tallado_m2|floatformat:0 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Espejo:</span>
+          <strong>${{ config.precio_espejo_m2|floatformat:0 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Transporte local:</span>
+          <strong>${{ config.costo_transporte_local|floatformat:0 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between small">
+          <span class="text-muted">Transporte nacional:</span>
+          <strong>${{ config.costo_transporte_nacional|floatformat:0 }}</strong>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Elementos del formulario
+const tipoVidrio = document.getElementById('id_tipo_vidrio');
+const anchoInput = document.getElementById('id_ancho');
+const altoInput  = document.getElementById('id_alto');
+const tipoTrabajo = document.getElementById('id_tipo_trabajo');
+const esEnvioNacional = document.getElementById('id_es_envio_nacional');
+
+// Función para calcular precio via AJAX
+async function calcularPrecio() {
+  const ancho = parseFloat(anchoInput?.value) || 0;
+  const alto  = parseFloat(altoInput?.value)  || 0;
+  if (!ancho || !alto || !tipoVidrio?.value) return;
+
+  try {
+    const resp = await fetch('{% url "calcular_precio_ajax" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify({
+        tipo_vidrio:      tipoVidrio.value,
+        ancho:            ancho,
+        alto:             alto,
+        tipo_trabajo:     tipoTrabajo?.value || 'corte',
+        es_envio_nacional: esEnvioNacional?.checked || false,
+      })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      const fmt = n => '$' + Math.round(n).toLocaleString('es-CO');
+      document.getElementById('precioTotal').textContent = fmt(data.precio_total);
+      document.getElementById('areaCalc').textContent = data.area.toFixed(4) + ' m²';
+      document.getElementById('precioVidrio').textContent = fmt(data.precio_vidrio);
+      document.getElementById('precioMano').textContent = fmt(data.recargo_trabajo);
+      document.getElementById('precioTransporte').textContent = fmt(data.costo_transporte);
+      document.getElementById('desgloseContainer').classList.remove('d-none');
+    } else {
+      document.getElementById('precioTotal').textContent = '⚠ ' + data.error;
+      document.getElementById('desgloseContainer').classList.add('d-none');
+    }
+  } catch(e) {
+    console.error('Error calculando precio:', e);
+  }
+}
+
+// Escuchar cambios
+[tipoVidrio, anchoInput, altoInput, tipoTrabajo, esEnvioNacional].forEach(el => {
+  el?.addEventListener('change', calcularPrecio);
+  el?.addEventListener('input', calcularPrecio);
+});
+</script>
+{% endblock %}

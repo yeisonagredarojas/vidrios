@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Deudas Pendientes{% endblock %}
+{% block page_title %}Deudas Pendientes{% endblock %}
+{% block page_subtitle %}Clientes con saldo por cobrar{% endblock %}
+{% block content %}
+{% if clientes_deudores %}
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fee2e2;"><i class="bi bi-people-fill" style="color:#991b1b;"></i></div>
+      <div><div class="stat-value">{{ clientes_deudores|length }}</div><div class="stat-label">Clientes con deuda</div></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr><th class="ps-4">Cliente</th><th>Ciudad</th><th>Pedidos Activos</th><th>Deuda Total</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for item in clientes_deudores %}
+          <tr>
+            <td class="ps-4">
+              <a href="{% url 'detalle_cliente' item.cliente.pk %}" class="fw-semibold text-decoration-none">{{ item.cliente.nombre }}</a>
+              <div class="small text-muted">{{ item.cliente.telefono }}</div>
+            </td>
+            <td>{{ item.cliente.ciudad }}</td>
+            <td><span class="badge bg-warning text-dark">{{ item.pedidos_pendientes }}</span></td>
+            <td class="fw-bold text-danger fs-6">${{ item.deuda|floatformat:0 }}</td>
+            <td>
+              <a href="https://wa.me/{{ item.cliente.telefono }}" target="_blank" class="btn btn-sm btn-success me-1" title="WhatsApp">
+                <i class="bi bi-whatsapp"></i>
+              </a>
+              <a href="{% url 'registrar_pago' %}?cliente={{ item.cliente.pk }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-cash"></i> Pago
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-success py-5">
+            <i class="bi bi-check-circle" style="font-size:3rem;display:block;margin-bottom:.5rem;"></i>
+            ¡Excelente! No hay deudas pendientes.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

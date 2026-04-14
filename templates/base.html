@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ERP Vidrios{% endblock %} | {{ EMPRESA_NOMBRE }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-w: 260px;
+      --primary: #1a56db;
+      --primary-dark: #1240a0;
+      --accent: #0ea5e9;
+      --bg: #f1f5f9;
+      --sidebar-bg: #0f172a;
+      --sidebar-text: #94a3b8;
+      --sidebar-hover: rgba(255,255,255,0.08);
+      --sidebar-active: rgba(26,86,219,0.25);
+    }
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); margin: 0; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex; flex-direction: column;
+      z-index: 1000; overflow-y: auto;
+      transition: transform .25s ease;
+    }
+    .sidebar-brand {
+      padding: 1.5rem 1.25rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-brand .brand-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; color: #fff; margin-bottom: .6rem;
+    }
+    .sidebar-brand h6 { color: #fff; font-weight: 700; font-size: .85rem; margin: 0; }
+    .sidebar-brand small { color: var(--sidebar-text); font-size: .72rem; }
+    .sidebar-section { padding: .75rem 1.25rem .25rem; }
+    .sidebar-section-label {
+      font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: #475569;
+    }
+    .sidebar a {
+      display: flex; align-items: center; gap: .7rem;
+      padding: .55rem 1.25rem; color: var(--sidebar-text);
+      text-decoration: none; font-size: .85rem; font-weight: 500;
+      border-radius: 8px; margin: 1px .5rem;
+      transition: all .15s;
+    }
+    .sidebar a:hover { background: var(--sidebar-hover); color: #e2e8f0; }
+    .sidebar a.active { background: var(--sidebar-active); color: #fff; }
+    .sidebar a i { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-footer {
+      margin-top: auto; padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-footer a { padding: .4rem 0; font-size: .8rem; }
+
+    /* ── Main content ── */
+    .main-wrap {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .topbar {
+      background: #fff; border-bottom: 1px solid #e2e8f0;
+      padding: .75rem 1.75rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-title { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+    .topbar-sub { font-size: .78rem; color: #64748b; }
+    .content { padding: 1.75rem; flex: 1; }
+
+    /* ── Cards ── */
+    .card { border: none; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+    .card-header { border-radius: 14px 14px 0 0 !important; }
+    .stat-card {
+      background: #fff; border-radius: 14px; padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .stat-card .stat-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .stat-card .stat-value { font-size: 1.7rem; font-weight: 800; color: #0f172a; line-height: 1; }
+    .stat-card .stat-label { font-size: .78rem; color: #64748b; margin-top: .2rem; }
+    .stat-card .stat-badge { font-size: .7rem; }
+
+    /* ── Tables ── */
+    .table { font-size: .875rem; }
+    .table th { font-weight: 600; color: #475569; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+    .badge { font-size: .72rem; font-weight: 600; }
+
+    /* ── Status badges ── */
+    .badge-cotizado { background: #dbeafe; color: #1e40af; }
+    .badge-abonado { background: #fef3c7; color: #92400e; }
+    .badge-en_proceso { background: #d1fae5; color: #065f46; }
+    .badge-terminado { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-cancelado { background: #fee2e2; color: #991b1b; }
+
+    /* ── Forms ── */
+    .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 .2rem rgba(26,86,219,.15); }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrap { margin-left: 0; }
+      .sidebar-overlay { display: block !important; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+    <h6>{{ EMPRESA_NOMBRE }}</h6>
+    <small>Sistema ERP</small>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-section-label">Principal</span>
+  </div>
+  <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <i class="bi bi-speedometer2"></i> Dashboard
+  </a>
+
+  <div class="sidebar-section">
+    <span class="sidebar-section-label">Gestión</span>
+  </div>
+  <a href="{% url 'lista_clientes' %}" class="{% if 'cliente' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-people-fill"></i> Clientes
+  </a>
+  <a href="{% url 'lista_pedidos' %}" class="{% if 'pedido' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-bag-fill"></i> Pedidos
+  </a>
+  <a href="{% url 'lista_pagos' %}" class="{% if 'pago' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-cash-stack"></i> Pagos
+  </a>
+  <a href="{% url 'deudas' %}" class="{% if 'deuda' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-exclamation-triangle-fill"></i> Deudas
+  </a>
+
+  <div class="sidebar-section">
+    <span class="sidebar-section-label">Operaciones</span>
+  </div>
+  <a href="{% url 'lista_inventario' %}" class="{% if 'inventario' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-boxes"></i> Inventario
+  </a>
+  <a href="{% url 'lista_trabajadores' %}" class="{% if 'trabajador' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-person-badge-fill"></i> Trabajadores
+  </a>
+  <a href="{% url 'lista_proveedores' %}" class="{% if 'proveedor' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-truck"></i> Proveedores
+  </a>
+
+  <div class="sidebar-section">
+    <span class="sidebar-section-label">Configuración</span>
+  </div>
+  <a href="{% url 'lista_configuracion' %}">
+    <i class="bi bi-currency-dollar"></i> Precios
+  </a>
+  <a href="/admin/" target="_blank">
+    <i class="bi bi-gear-fill"></i> Admin Django
+  </a>
+
+  <div class="sidebar-footer">
+    <a href="{% url 'landing' %}" target="_blank">
+      <i class="bi bi-globe"></i> Sitio Público
+    </a>
+    <a href="{% url 'logout' %}" class="text-danger">
+      <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+    </a>
+    <div class="mt-2" style="font-size:.72rem;color:#475569;">
+      <i class="bi bi-person-circle"></i> {{ request.user.username }}
+    </div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main-wrap">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-sub">{% block page_subtitle %}{% endblock %}</div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      {% block topbar_actions %}{% endblock %}
+      <button class="btn btn-sm btn-outline-secondary d-lg-none" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="px-4 pt-3">
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+      {{ msg }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

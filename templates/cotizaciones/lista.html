@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Precios{% endblock %}
+{% block page_title %}Configuración de Precios{% endblock %}
+{% block page_subtitle %}Parametriza todos los precios del negocio{% endblock %}
+{% block content %}
+<div class="row g-3">
+  {% for c in configs %}
+  <div class="col-md-8">
+    <div class="card {% if c.activo %}border-primary{% endif %}">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">{{ c.nombre }} {% if c.activo %}<span class="badge bg-primary ms-2">Activa</span>{% endif %}</h6>
+        <a href="{% url 'editar_configuracion' c.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <h6 class="text-muted small mb-3">PRECIOS POR M²</h6>
+            <div class="d-flex justify-content-between mb-2"><span>Vidrio Normal:</span><strong>${{ c.precio_vidrio_normal_m2|floatformat:0 }}</strong></div>
+            <div class="d-flex justify-content-between mb-2"><span>Tallado:</span><strong>${{ c.precio_vidrio_tallado_m2|floatformat:0 }}</strong></div>
+            <div class="d-flex justify-content-between mb-2"><span>Espejo:</span><strong>${{ c.precio_espejo_m2|floatformat:0 }}</strong></div>
+            <div class="d-flex justify-content-between mb-2"><span>Templado:</span><strong>${{ c.precio_vidrio_templado_m2|floatformat:0 }}</strong></div>
+            <div class="d-flex justify-content-between"><span>Laminado:</span><strong>${{ c.precio_vidrio_laminado_m2|floatformat:0 }}</strong></div>
+          </div>
+          <div class="col-6">
+            <h6 class="text-muted small mb-3">RECARGOS Y TRANSPORTE</h6>
+            <div class="d-flex justify-content-between mb-2"><span>Recargo Instalación:</span><strong>{{ c.recargo_instalacion }}%</strong></div>
+            <div class="d-flex justify-content-between mb-2"><span>Recargo Diseño:</span><strong>{{ c.recargo_diseno }}%</strong></div>
+            <div class="d-flex justify-content-between mb-2"><span>Transporte Local:</span><strong>${{ c.costo_transporte_local|floatformat:0 }}</strong></div>
+            <div class="d-flex justify-content-between"><span>Transporte Nacional:</span><strong>${{ c.costo_transporte_nacional|floatformat:0 }}</strong></div>
+          </div>
+        </div>
+        <div class="mt-2 text-muted small">Actualizado: {{ c.actualizado_en|date:"d/m/Y H:i" }}</div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12"><div class="alert alert-warning">No hay configuración de precios. Crea una desde el Admin Django.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}
